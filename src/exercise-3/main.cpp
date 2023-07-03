@@ -129,7 +129,7 @@ int main (int argc, char *argv[])
     if (verbose) cout << endl;
 
     // FROSch preconditioner for Belos
-    RCP<operatort_type> belosPrec;
+    // RCP<operatort_type> belosPrec;
     /*
     ============================================================================
     !! INSERT CODE !!
@@ -140,6 +140,35 @@ int main (int argc, char *argv[])
     + Convert prec into the RCP<OperatorT<multivector_type> > or RCP<operatort_type>, respectively, belosPrec
     ============================================================================
     */
+
+    
+    bool laplace_eq = (!equation.compare("laplace"));
+    bool elastic_2_eq = (!equation.compare("elasticity") && dimension == 2);
+    bool elastic_3_eq = (!equation.compare("elasticity") && dimension == 3);
+
+    int dofspernode;
+
+    if (laplace_eq)
+        dofspernode = 1;
+    else if (elastic_2_eq)
+        dofspernode = 2;
+    else if (elastic_3_eq)
+        dofspernode = 3;
+    
+    RCP<twolevelpreconditioner_type> prec(
+        new twolevelpreconditioner_type(A, precList));
+
+    if (laplace_eq)
+        prec->initialize(dimension, dofspernode, precList->get("Overlap", 1));
+
+    // If elastic
+    if (elastic_2_eq || elastic_3_eq) {
+        precList->set("Null Space Type","Linear Elasticity");
+        prec->initialize(dimension,dofspernode,precList->get("Overlap",1),null,coordinates);
+    }
+
+    prec->compute();
+    RCP<operatort_type> belosPrec = rcp(new xpetraop_type(prec));
 
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
