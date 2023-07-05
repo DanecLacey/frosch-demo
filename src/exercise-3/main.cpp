@@ -142,13 +142,24 @@ int main (int argc, char *argv[])
     */
 
     
-    bool laplace_eq = (!equation.compare("laplace"));
+    bool laplace_2_eq = (!equation.compare("laplace") && dimension == 2);
+    bool laplace_3_eq = (!equation.compare("laplace") && dimension == 3);
     bool elastic_2_eq = (!equation.compare("elasticity") && dimension == 2);
     bool elastic_3_eq = (!equation.compare("elasticity") && dimension == 3);
 
+    if(laplace_2_eq && laplace_3_eq && elastic_2_eq && elastic_3_eq){
+        printf("ERROR: No equation type selected");
+        exit(1);
+    }
+    // std::cout << "laplace_2_eq: " << laplace_2_eq << std::endl;
+    // std::cout << "laplace_3_eq: " << laplace_3_eq << std::endl;
+    // std::cout << "elastic_2_eq: " << elastic_2_eq << std::endl;
+    // std::cout << "elastic_3_eq: " << elastic_3_eq << std::endl;
+    // exit(0);
+
     int dofspernode;
 
-    if (laplace_eq)
+    if (laplace_2_eq || laplace_3_eq)
         dofspernode = 1;
     else if (elastic_2_eq)
         dofspernode = 2;
@@ -158,7 +169,7 @@ int main (int argc, char *argv[])
     RCP<twolevelpreconditioner_type> prec(
         new twolevelpreconditioner_type(A, precList));
 
-    if (laplace_eq)
+    if (laplace_2_eq || laplace_3_eq)
         prec->initialize(dimension, dofspernode, precList->get("Overlap", 1));
 
     // If elastic
